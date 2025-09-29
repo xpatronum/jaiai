@@ -31,10 +31,14 @@ scrapy crawl one_page
 ## 🌐 Example
 
 ```bash
-scrapy crawl all_pages -o all_pages_sravni_result.json
+scrapy crawl banki_all_pages -o all_pages_banki_result.json
 ```
 
-This will save the results to `all_pages_sravni_result.json`.
+This will save the results to `all_pages_banki_result.json`.
+
+```bash
+scrapy crawl sravni_all_gazprombank_pages -o all_pages_sravni_result.json
+```
 
 ## 📂 Output
 

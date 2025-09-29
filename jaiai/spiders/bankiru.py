@@ -12,7 +12,7 @@ from w3lib.html import remove_tags
 
 class OnePageSpider(CrawlSpider):
     # name – имя паука
-    name = "one_page"
+    name = "banki_one_page"
     # allowed_domains – домены сайта, в пределах которого необходимо сканировать
     allowed_domains = ["www.banki.ru"]
     # start_urls – список начальных адресов
@@ -47,7 +47,7 @@ class OnePageSpider(CrawlSpider):
 
 class AllPagesInvestmentSpider(CrawlSpider):
     # name – имя паука
-    name = "all_pages"
+    name = "banki_all_pages"
     # allowed_domains – домены сайта, в пределах которого необходимо сканировать
     allowed_domains = ["www.banki.ru"]
     # start_urls – список начальных адресов
