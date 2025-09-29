@@ -32,15 +32,24 @@ else
     fi
 fi
 
-# Проверяем наличие scrapy команды
-if ! command -v scrapy &> /dev/null; then
+# Проверяем наличие scrapy команды и получаем полный путь
+SCRAPY_PATH=$(command -v scrapy 2>/dev/null)
+if [ -z "$SCRAPY_PATH" ]; then
     echo "❌ ОШИБКА: Команда scrapy не найдена!"
     echo "💡 Убедитесь что виртуальное окружение активировано и scrapy установлен"
     echo "💡 Или установите: pip install scrapy"
+    echo ""
+    echo "🔍 Отладочная информация:"
+    echo "PATH: $PATH"
+    echo "VIRTUAL_ENV: $VIRTUAL_ENV"
+    echo "Python: $(which python)"
     exit 1
 fi
 
-echo "✅ Scrapy найден: $(scrapy version)"
+echo "✅ Scrapy найден: $SCRAPY_PATH"
+echo "✅ Версия: $(scrapy version)"
+echo "🔍 Текущий PATH: $PATH"
+echo "🔍 Виртуальное окружение: $VIRTUAL_ENV"
 
 # Создаем директорию для логов если её нет
 mkdir -p logs
@@ -54,13 +63,41 @@ run_spider() {
     
     echo "📊 Запускаем $spider_name (лимит: $count отзывов)"
     
-    # Используем scrapy напрямую с правильным PATH
-    nohup scrapy crawl "$spider_name" -a count="$count" -o "$output_file" \
-        > "logs/$log_file" 2>&1 &
+    # Логируем команду которая будет выполнена
+    local full_command="$SCRAPY_PATH crawl $spider_name -a count=$count -o $output_file"
+    echo "🔧 Команда: $full_command"
+    echo "🔧 Лог файл: logs/$log_file"
+    echo "🔧 PATH для nohup: $PATH"
+    
+    # Записываем отладочную информацию в начало лог файла
+    {
+        echo "=== SCRAPY SPIDER LOG: $spider_name ==="
+        echo "Время запуска: $(date)"
+        echo "Команда: $full_command"
+        echo "PATH: $PATH"
+        echo "VIRTUAL_ENV: $VIRTUAL_ENV"
+        echo "Рабочая директория: $(pwd)"
+        echo "================================="
+        echo ""
+    } > "logs/$log_file"
+    
+    # Способ 1: Используем полный путь к scrapy и явно передаем окружение
+    nohup env PATH="$PATH" VIRTUAL_ENV="$VIRTUAL_ENV" "$SCRAPY_PATH" crawl "$spider_name" -a count="$count" -o "$output_file" \
+        >> "logs/$log_file" 2>&1 &
     
     local pid=$!
     echo "✅ $spider_name запущен с PID: $pid"
     echo "$pid" > "logs/${spider_name}.pid"
+    
+    # Даем немного времени на старт и проверяем, что процесс запустился
+    sleep 2
+    if kill -0 "$pid" 2>/dev/null; then
+        echo "✅ Процесс $spider_name (PID: $pid) успешно запущен"
+    else
+        echo "❌ ОШИБКА: Процесс $spider_name (PID: $pid) не запустился!"
+        echo "📋 Последние строки лога:"
+        tail -5 "logs/$log_file" | sed 's/^/    /'
+    fi
 }
 
 # Запускаем спайдеры
@@ -90,3 +127,7 @@ echo "   kill \$(cat logs/banki_all_pages.pid)"
 echo "   kill \$(cat logs/sravni_all_gazprombank_pages.pid)"
 echo ""
 echo "✨ Можете безопасно выйти из SSH сессии - процессы продолжат работу!"
+echo ""
+echo "🔧 АЛЬТЕРНАТИВНЫЙ СПОСОБ ЗАПУСКА (если что-то пошло не так):"
+echo "   nohup bash -c 'source myenv/bin/activate && scrapy crawl banki_all_pages -a count=4000 -o banki.json' > logs/banki_alt.log 2>&1 &"
+echo "   nohup bash -c 'source myenv/bin/activate && scrapy crawl sravni_all_gazprombank_pages -a count=4000 -o sravni.json' > logs/sravni_alt.log 2>&1 &"
