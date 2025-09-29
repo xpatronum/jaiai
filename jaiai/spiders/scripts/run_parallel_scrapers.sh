@@ -30,14 +30,14 @@ run_spider() {
 }
 
 # Запускаем спайдеры
-run_spider "banki_all_pages" "1000" "banki_1000.json" "banki_scraper.log"
-run_spider "sravni_all_gazprombank_pages" "500" "sravni_500.json" "sravni_scraper.log"
+run_spider "banki_all_pages" "4000" "banki.json" "banki_scraper.log"
+run_spider "sravni_all_gazprombank_pages" "4000" "sravni.json" "sravni_scraper.log"
 
 echo ""
 echo "🎯 Оба спайдера запущены в фоне!"
 echo "📁 Результаты будут сохранены в:"
-echo "   - banki_1000.json (лимит: 1000 отзывов)"
-echo "   - sravni_500.json (лимит: 500 отзывов)"
+echo "   - banki.json (лимит: 4000 отзывов)"
+echo "   - sravni.json (лимит: 4000 отзывов)"
 echo ""
 echo "📋 Логи доступны в:"
 echo "   - logs/banki_scraper.log"

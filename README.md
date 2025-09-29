@@ -31,8 +31,8 @@ scrapy crawl one_page
 ## 🌐 Example
 
 ```bash
-scrapy crawl banki_all_pages -a count=1000 -o banki_1000.json
-scrapy crawl sravni_all_gazprombank_pages -a count=500 -o sravni_500.json
+scrapy crawl banki_all_pages -a count=1000 -o banki.json
+scrapy crawl sravni_all_gazprombank_pages -a count=1000 -o sravni.json
 ```
 
 ## 📂 Output

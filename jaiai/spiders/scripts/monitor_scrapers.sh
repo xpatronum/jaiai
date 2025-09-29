@@ -46,7 +46,7 @@ echo ""
 
 # Проверяем размеры выходных файлов
 echo "📁 Размеры выходных файлов:"
-for file in banki_1000.json sravni_500.json; do
+for file in banki.json sravni.json; do
     if [ -f "$file" ]; then
         size=$(du -h "$file" | cut -f1)
         lines=$(wc -l < "$file" 2>/dev/null || echo "0")
