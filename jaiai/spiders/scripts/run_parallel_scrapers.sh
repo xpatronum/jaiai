@@ -32,14 +32,15 @@ else
     fi
 fi
 
-# Проверяем наличие scrapy
-if ! $PYTHON_CMD -c "import scrapy" 2>/dev/null; then
-    echo "❌ ОШИБКА: Scrapy не установлен!"
-    echo "💡 Установите: pip install scrapy"
+# Проверяем наличие scrapy команды
+if ! command -v scrapy &> /dev/null; then
+    echo "❌ ОШИБКА: Команда scrapy не найдена!"
+    echo "💡 Убедитесь что виртуальное окружение активировано и scrapy установлен"
+    echo "💡 Или установите: pip install scrapy"
     exit 1
 fi
 
-echo "✅ Scrapy найден: $($PYTHON_CMD -c 'import scrapy; print(scrapy.__version__)')"
+echo "✅ Scrapy найден: $(scrapy version)"
 
 # Создаем директорию для логов если её нет
 mkdir -p logs
@@ -53,8 +54,8 @@ run_spider() {
     
     echo "📊 Запускаем $spider_name (лимит: $count отзывов)"
     
-    # Используем python -m scrapy вместо просто scrapy
-    nohup $PYTHON_CMD -m scrapy crawl "$spider_name" -a count="$count" -o "$output_file" \
+    # Используем scrapy напрямую с правильным PATH
+    nohup scrapy crawl "$spider_name" -a count="$count" -o "$output_file" \
         > "logs/$log_file" 2>&1 &
     
     local pid=$!
