@@ -3,11 +3,43 @@
 # Скрипт для параллельного запуска scrapy спайдеров в фоне
 # Использование: ./run_parallel_scrapers.sh
 
-# Переходим в директорию проекта
+# Переходим в корневую директорию проекта (где находится scrapy.cfg)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+cd "$PROJECT_ROOT"
 
 echo "🚀 Запускаем scrapy спайдеры в фоне..."
+echo "📁 Рабочая директория: $(pwd)"
+
+# Проверяем, активировано ли виртуальное окружение
+if [[ "$VIRTUAL_ENV" != "" ]]; then
+    echo "✅ Виртуальное окружение активно: $VIRTUAL_ENV"
+    PYTHON_CMD="python"
+else
+    echo "⚠️  Виртуальное окружение не активно, пытаемся найти myenv..."
+    # Ищем виртуальное окружение
+    if [ -f "myenv/bin/activate" ]; then
+        echo "🔄 Активируем виртуальное окружение myenv"
+        source myenv/bin/activate
+        PYTHON_CMD="python"
+    elif [ -f "../myenv/bin/activate" ]; then
+        echo "🔄 Активируем виртуальное окружение ../myenv"
+        source ../myenv/bin/activate
+        PYTHON_CMD="python"
+    else
+        echo "❌ Виртуальное окружение не найдено, используем системный Python"
+        PYTHON_CMD="python3"
+    fi
+fi
+
+# Проверяем наличие scrapy
+if ! $PYTHON_CMD -c "import scrapy" 2>/dev/null; then
+    echo "❌ ОШИБКА: Scrapy не установлен!"
+    echo "💡 Установите: pip install scrapy"
+    exit 1
+fi
+
+echo "✅ Scrapy найден: $($PYTHON_CMD -c 'import scrapy; print(scrapy.__version__)')"
 
 # Создаем директорию для логов если её нет
 mkdir -p logs
@@ -21,7 +53,8 @@ run_spider() {
     
     echo "📊 Запускаем $spider_name (лимит: $count отзывов)"
     
-    nohup scrapy crawl "$spider_name" -a count="$count" -o "$output_file" \
+    # Используем python -m scrapy вместо просто scrapy
+    nohup $PYTHON_CMD -m scrapy crawl "$spider_name" -a count="$count" -o "$output_file" \
         > "logs/$log_file" 2>&1 &
     
     local pid=$!

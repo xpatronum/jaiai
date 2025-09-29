@@ -3,8 +3,15 @@
 # Скрипт для мониторинга запущенных scrapy процессов
 # Использование: ./monitor_scrapers.sh
 
+# Переходим в корневую директорию проекта
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+cd "$PROJECT_ROOT"
+
 echo "🔍 МОНИТОРИНГ SCRAPY ПРОЦЕССОВ"
 echo "================================"
+echo "📁 Рабочая директория: $(pwd)"
+echo ""
 
 # Проверяем запущенные scrapy процессы
 echo "📊 Активные scrapy процессы:"
