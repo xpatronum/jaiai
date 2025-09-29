@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FastAPI SSE Client</title>
+</head>
+<body>
+  <h1>SSE Messages</h1>
+  <div id="messages"></div>
+
+  <script>
+    const eventSource = new EventSource("http://localhost:2288/ts_render");
+
+    eventSource.onmessage = function(event) {
+      const messages = document.getElementById("messages");
+      const p = document.createElement("p");
+      p.textContent = `Received: ${event.data}`;
+      messages.appendChild(p);
+    };
+
+    eventSource.onerror = function() {
+      console.error("SSE connection error");
+    };
+  </script>
+</body>
+</html>
