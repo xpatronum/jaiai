@@ -1,14 +1,25 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/jaiui.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>JAI UI</title>
-    <script type="module" crossorigin src="/assets/index-DDXo4Pr3.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-TnBR-Htq.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FastAPI SSE Client</title>
+</head>
+<body>
+  <h1>SSE Messages</h1>
+  <div id="messages"></div>
+
+  <script>
+    const eventSource = new EventSource("http://localhost:2288/ts_render");
+
+    eventSource.onmessage = function(event) {
+      const messages = document.getElementById("messages");
+      const p = document.createElement("p");
+      p.textContent = `Received: ${event.data}`;
+      messages.appendChild(p);
+    };
+
+    eventSource.onerror = function() {
+      console.error("SSE connection error");
+    };
+  </script>
+</body>
 </html>
