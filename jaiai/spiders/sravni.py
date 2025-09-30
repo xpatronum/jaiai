@@ -2,6 +2,7 @@ import scrapy
 import json
 import re
 import html
+from datetime import datetime
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.exceptions import CloseSpider
@@ -19,8 +20,8 @@ class SravniGazprombankSpider(CrawlSpider):
     # Пользовательский агент для избежания блокировок
     custom_settings = {
         'USER_AGENT': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'DOWNLOAD_DELAY': 2,  # Задержка между запросами
-        'RANDOMIZE_DOWNLOAD_DELAY': 0.5,  # Случайная задержка
+        'DOWNLOAD_DELAY': 1,  # Задержка между запросами
+        'RANDOMIZE_DOWNLOAD_DELAY': 0.25,  # Случайная задержка
     }
 
     rules = (
@@ -184,6 +185,25 @@ class SravniGazprombankSpider(CrawlSpider):
                         item['review'] = clean_text
                 except:
                     pass
+        
+        # Дата публикации отзыва
+        date_published = review_data.get('datePublished')
+        if date_published:
+            try:
+                # Конвертируем из ISO формата в "DD.MM.YYYY HH:MM"
+                date_str = str(date_published).strip()
+                
+                # Парсим ISO дату
+                dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+                
+                # Форматируем в нужный вид
+                formatted_date = dt.strftime('%d.%m.%Y %H:%M')
+                item['date_published'] = formatted_date
+                
+            except Exception as e:
+                self.logger.warning(f"Ошибка обработки даты: {e}, оставляем как есть")
+                # Если не удалось преобразовать, оставляем как есть
+                item['date_published'] = str(date_published).strip()
         
         # Проверяем, что у нас есть хотя бы заголовок или текст
         if not (item.get('title') or item.get('review')):
