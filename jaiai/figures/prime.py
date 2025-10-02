@@ -1,9 +1,15 @@
 import random
 import re
 from collections import Counter
-from typing import Dict, Iterable, List, Tuple
+from collections.abc import Iterable
+from pathlib import Path
+from typing import Any
 
+import plotly.express as px
+import polars as pl
 from wordcloud import WordCloud
+
+from jaiai.figures.mask import IChart
 
 
 class WordCloudFigure:
@@ -11,14 +17,14 @@ class WordCloudFigure:
     @staticmethod
     def _tokenize(
         s: str, split_pat: re.Pattern, strip_chars: str
-    ) -> List[Tuple[str, str]]:
+    ) -> list[tuple[str, str]]:
         """
         Возвращает список (orig, norm), где:
             - orig — токен после strip(strip_chars), для вывода;
             - norm — norm_orig.casefold(), для сравнения со стоп-словами.
         Пустые токены отбрасываются.
         """
-        out: List[Tuple[str, str]] = []
+        out: list[tuple[str, str]] = []
         for t in split_pat.split(s):
             if not t:
                 continue
@@ -35,11 +41,11 @@ class WordCloudFigure:
 
     def _count_freqs_by_tokens(
         self,
-        tokens: List[Tuple[str, str]],
+        tokens: list[tuple[str, str]],
         stopwords: set[str],
         split_pat: re.Pattern,
         strip_chars: str = ".,:;!?()[]{}\"'«»`~…/\\|*#@%^&+=\t\r",
-    ) -> Dict[str, int]:
+    ) -> dict[str, int]:
 
         n = len(tokens)
 
@@ -47,7 +53,7 @@ class WordCloudFigure:
 
         # --- подготавливаем словарь фраз-стоп-слов: длина -> set(tuple(norm_tokens))
 
-        phrase_by_len: Dict[int, set] = {}
+        phrase_by_len: dict[int, set] = {}
         max_len = 1
         for sw in stopwords:
             phrase_tokens = self._tokenize(sw, split_pat, strip_chars)
@@ -98,6 +104,7 @@ class WordCloudFigure:
         stopwords: list[str] | None = None,
         syms_to_split: Iterable[str] = (" ", "\n", "-"),
         strip_chars: str = ".,:;!?()[]{}\"'«»`~…/\\|*#@%^&+=\t\r",
+        only_json: bool = False,
     ):
 
         split_pat = re.compile("|".join(re.escape(s) for s in syms_to_split))
@@ -109,8 +116,6 @@ class WordCloudFigure:
             split_pat=split_pat,
             strip_chars=strip_chars,
         )
-
-        # color_func → вернём уже готовый цвет, чтобы клиент ничего не пересчитывал
 
         wc = WordCloud(
             width=width,
@@ -147,3 +152,73 @@ class WordCloudFigure:
             )
 
         return words, wc
+
+
+class PlotlyScatterChart(IChart):
+    def view(
+        self,
+        data: pl.DataFrame,
+        label_to_view: str = "title",
+        max_label_length: int = 22,
+        logo_path: str | None = None,
+        **props,
+    ) -> Any:
+        pl_data = data.rename({"label": label_to_view})
+        pl_data = pl_data.with_columns(
+            pl.col(label_to_view).apply(
+                lambda x: (
+                    (x[:max_label_length] + "...") if len(x) > max_label_length else x
+                )
+            )
+        )
+        pd_data = pl_data.to_pandas()
+        fig = px.scatter(
+            pd_data,
+            x="x",
+            y="y",
+            color=label_to_view,
+            hover_data={label_to_view: True, "text": False},
+        )
+        fig.update_layout(
+            plot_bgcolor="black", paper_bgcolor="black", font=dict(color="white")
+        )
+
+        if logo_path is not None:
+            fig.add_layout_image(
+                dict(
+                    source=str(
+                        Path(__file__).parent.parent / "builtins" / "Logo.jpg"
+                    ),  # Path to your logo file  # noqa: F821
+                    xref="paper",
+                    yref="paper",
+                    x=1,
+                    y=1,
+                    sizex=0.1,
+                    sizey=0.1,
+                    xanchor="right",
+                    yanchor="bottom",
+                )
+            )
+
+        # # Add a "Powered by" text next to the logo
+        # fig.add_annotation(
+        # dict(
+        #     x=0.98,
+        #     y=1.1,
+        #     xref='paper',
+        #     yref='paper',
+        #     text="Powered by",
+        #     showarrow=False,
+        #     font=dict(
+        #         family="Arial",
+        #         size=12,
+        #         color="Cyan"
+        #     ),
+        #     align="right"
+        # )
+        # )
+
+        return fig
+
+    def save(self, filename, **kwargs):
+        self.chart.write_image(filename, **kwargs)

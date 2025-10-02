@@ -38,3 +38,6 @@ def _extract_md_pairs(markdown: str) -> Tuple[List[str], List[str]]:
     if any(s not in VALID_SENT for s in sentiments):
         return [], []
     return topics, sentiments
+
+
+__all__ = ["_extract_md_pairs"]

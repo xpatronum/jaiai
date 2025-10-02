@@ -1,0 +1,35 @@
+api:
+  devices_to_use:
+  - cuda:0
+  - cpu
+  - mps
+  use_gpu: True
+  gpu_props:
+    local_rank: 0
+  redis:
+    url: 'redis://${REDIS_HOST}:${REDIS_PORT}/0'
+    job_expire_seconds: 3600
+
+  llm:
+    host: ${LLM_BASE_URL}
+
+  clustering:
+    embedder:
+      model_name_or_path: '${EMBEDDING_MODEL_NAME_OR_PATH}'
+      pooling_mode: mean
+      prefix: "query: "
+
+    transformers_backend:
+      batch_size: 2
+
+    params:
+      top_n_words: 10
+      n_gram_range: [ 1, 4 ]
+      min_topic_size: 5
+      calculate_probabilities: false
+
+    umap:
+      n_components: 2
+      n_neighbors: 3
+      min_dist: 0.1
+      metric: cosine

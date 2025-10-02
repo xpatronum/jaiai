@@ -37,14 +37,13 @@ class JUSTATOMDataset(IDataset):
 
 
 class JSONDataset(IDataset):
-    def __init__(self, fp, as_polars: bool = True, **props):
+    def __init__(self, fp, **props):
         self.fp = fp
-        self.as_polars = as_polars
 
     def iterator(self, **kwargs) -> pl.DataFrame | list[dict]:
         with open(self.fp, "r") as fp:
             js_docs = json.load(fp)
-        if not self.as_polars:
+        if kwargs.get("as_json", True):
             return js_docs
         return pl.from_dicts(js_docs)
 
