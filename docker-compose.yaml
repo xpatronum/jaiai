@@ -1,0 +1,44 @@
+version: '3.4'
+services:
+  weaviate:
+    command:
+      - --host
+      - 0.0.0.0
+      - --port
+      - '2211'
+      - --scheme
+      - http
+    image: cr.weaviate.io/semitechnologies/weaviate:1.28.2
+    ports:
+      - 2211:2211
+      - 50051:50051
+    volumes:
+      - weaviatedb:/var/lib/weaviate
+    restart: on-failure:0
+    environment:
+      QUERY_DEFAULTS_LIMIT: 2048
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'none'
+      ENABLE_MODULES: ''
+      CLUSTER_HOSTNAME: 'node1'
+  redis:
+    image: redis:latest
+    volumes:
+      - ./redis.conf:/redis.conf
+    ports:
+      - '6379:6379'
+    command: [ "redis-server", "/redis.conf" ]
+  
+  redis-insight:
+    image: redis/redisinsight:latest
+    restart: always
+    ports:
+      - "5540:5540"
+    volumes:
+      - redis-insight:/data
+
+volumes:
+  weaviatedb:
+    external: false
+  redis-insight:
